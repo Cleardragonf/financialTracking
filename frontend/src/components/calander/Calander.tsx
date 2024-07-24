@@ -1,22 +1,9 @@
-// src/components/BigCalendar.tsx
 import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
-
-// Define the type for your event data
-interface Event {
-  _id: {
-    $oid: string;
-  };
-  title: string;
-  amount: number;
-  date: string;
-  notes: string;
-  type: string;
-  __v: number;
-}
+import { Transaction } from '../../App';
 
 // Setup date-fns localizer
 const locales = {
@@ -39,13 +26,19 @@ export const InteractiveCalendar: React.FC = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1; // months are zero-based
 
-    axios.get<Event[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${month}`)
+    axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${month}`)
       .then(response => {
-        const events = response.data.map(event => ({
-          title: `${event.title} - $${event.amount}`,
-          start: new Date(event.date),
-          end: new Date(event.date), // Assuming all events are one-day events
-        }));
+        const events = response.data.map(event => {
+          // Parse the date string and adjust for local time zone
+          const startDate = startOfDay(parseISO(event.date));
+          const endDate = endOfDay(startDate); // Assuming one-day events
+
+          return {
+            title: `${event.title} - $${event.amount}`,
+            start: startDate,
+            end: endDate,
+          };
+        });
         setEvents(events);
       })
       .catch(error => {
