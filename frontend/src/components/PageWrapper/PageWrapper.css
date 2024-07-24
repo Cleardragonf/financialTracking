@@ -1,0 +1,29 @@
+/* src/App.css or src/PageWrapper.css */
+
+/* Ensure the page-wrapper takes full height */
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Ensure the navigation bar is fixed at the top */
+  .navigation-bar {
+    background-color: #333; /* Example background color */
+    color: white;
+    padding: 10px;
+    position: fixed; /* Fixes the navbar at the top */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* Ensures the navbar is above other content */
+  }
+  
+  /* Adjust the content to start below the navigation bar */
+  .content {
+    margin-top: 60px; /* Adjust based on the height of your NavigationBar */
+    flex: 1;
+    overflow-y: auto; /* Ensures scrolling if the content overflows */
+  }
+  
