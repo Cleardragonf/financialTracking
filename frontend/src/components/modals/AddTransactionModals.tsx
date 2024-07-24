@@ -27,13 +27,28 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
     });
   };
 
+  const getLastDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const adjustToLastDayOfMonth = (date: Date) => {
+    const lastDay = getLastDayOfMonth(date.getFullYear(), date.getMonth());
+    const adjustedDate = new Date(date);
+    adjustedDate.setDate(Math.min(date.getDate(), lastDay));
+    return adjustedDate;
+  };
+
   const calculateRecurringDates = (startDate: Date, recurrence: string, endDate: Date) => {
-    const dates = [];
-    let currentDate = startDate;
-
+    const dates: Date[] = [];
+    let currentDate = new Date(startDate);
+  
     while (currentDate <= endDate) {
-      dates.push(new Date(currentDate));
-
+      // Adjust currentDate to the last day of the month if needed
+      let adjustedDate = adjustToLastDayOfMonth(currentDate);
+      if (adjustedDate > endDate) break;
+  
+      dates.push(adjustedDate);
+  
       switch (recurrence) {
         case 'weekly':
           currentDate.setDate(currentDate.getDate() + 7);
@@ -42,23 +57,30 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           currentDate.setDate(currentDate.getDate() + 14);
           break;
         case 'monthly':
+          // Adjust the day of the new month to fit if necessary
           currentDate.setMonth(currentDate.getMonth() + 1);
+          currentDate = adjustToLastDayOfMonth(currentDate);
           break;
         case 'bi-monthly':
+          // Adjust the day of the new month to fit if necessary
           currentDate.setMonth(currentDate.getMonth() + 2);
+          currentDate = adjustToLastDayOfMonth(currentDate);
           break;
         case 'yearly':
+          // Adjust the day of the new month to fit if necessary
           currentDate.setFullYear(currentDate.getFullYear() + 1);
+          currentDate = adjustToLastDayOfMonth(currentDate);
           break;
         default:
           break;
       }
     }
-
+  
     return dates;
   };
-
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    
     e.preventDefault();
 
     let endDate = formData.enddate ? new Date(formData.enddate) : new Date();
@@ -81,8 +103,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           headers: {
             'Content-Type': 'application/json',
           },
+          
         });
       });
+      console.log(requests);
 
       await Promise.all(requests);
 
