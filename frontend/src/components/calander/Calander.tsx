@@ -20,31 +20,52 @@ const localizer = dateFnsLocalizer({
 
 export const InteractiveCalendar: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
+  const [viewDate, setViewDate] = useState(new Date()); // State to track the current view date
+
+  const fetchEvents = async (year: number, month: number) => {
+    try {
+      // Fetch transactions for the given year and month
+      const response = await axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${month}`);
+      const transactions = response.data;
+
+      // Deduplicate transactions based on a unique identifier
+      const uniqueTransactions = Array.from(
+        new Map(transactions.map(transaction => [transaction._id, transaction])).values()
+      );
+
+      // Map and format the events
+      const formattedEvents = uniqueTransactions.map(event => {
+        const startDate = startOfDay(parseISO(event.date));
+        const endDate = endOfDay(startDate); // Assuming one-day events
+
+        return {
+          title: `${event.title} - $${event.amount}`,
+          start: startDate,
+          end: endDate,
+        };
+      });
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
   useEffect(() => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1; // months are zero-based
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth() + 1; // months are zero-based
 
-    axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${month}`)
-      .then(response => {
-        const events = response.data.map(event => {
-          // Parse the date string and adjust for local time zone
-          const startDate = startOfDay(parseISO(event.date));
-          const endDate = endOfDay(startDate); // Assuming one-day events
+    fetchEvents(year, month);
+  }, [viewDate]);
 
-          return {
-            title: `${event.title} - $${event.amount}`,
-            start: startDate,
-            end: endDate,
-          };
-        });
-        setEvents(events);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, []);
+  const handleViewChange = (view: any) => {
+    console.log('View changed to:', view);
+    // Handle view change if needed
+  };
+
+  const handleNavigate = (date: Date) => {
+    setViewDate(date);
+  };
 
   return (
     <div style={{ height: '80vh' }}>
@@ -54,6 +75,8 @@ export const InteractiveCalendar: React.FC = () => {
         startAccessor="start"
         endAccessor="end"
         style={{ height: '100%' }}
+        onNavigate={handleNavigate}
+        onView={handleViewChange}
       />
     </div>
   );

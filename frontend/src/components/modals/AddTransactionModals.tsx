@@ -27,23 +27,66 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Set default end date if recurrence is not 'one-time' and enddate is empty
-    if (formData.reocurrance !== 'one-time' && !formData.enddate) {
-      const defaultEndDate = new Date();
-      defaultEndDate.setFullYear(defaultEndDate.getFullYear() + 1);
-      formData.enddate = defaultEndDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  const calculateRecurringDates = (startDate: Date, recurrence: string, endDate: Date) => {
+    const dates = [];
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      dates.push(new Date(currentDate));
+
+      switch (recurrence) {
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + 7);
+          break;
+        case 'bi-weekly':
+          currentDate.setDate(currentDate.getDate() + 14);
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          break;
+        case 'bi-monthly':
+          currentDate.setMonth(currentDate.getMonth() + 2);
+          break;
+        case 'yearly':
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+          break;
+        default:
+          break;
+      }
     }
 
+    return dates;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    let endDate = formData.enddate ? new Date(formData.enddate) : new Date();
+    if (!formData.enddate) {
+      endDate.setFullYear(endDate.getFullYear() + 2); // Default to 2 years if no end date
+    }
+
+    const startDate = new Date(formData.date);
+    const recurrenceDates = formData.reocurrance !== 'one-time'
+      ? calculateRecurringDates(startDate, formData.reocurrance, endDate)
+      : [startDate];
+
     try {
-      const response = await axios.post('http://localhost:5000/api/transactions', formData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const requests = recurrenceDates.map(date => {
+        const transactionData = {
+          ...formData,
+          date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        };
+        return axios.post('http://localhost:5000/api/transactions', transactionData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       });
-      console.log('Transaction added successfully', response.data);
+
+      await Promise.all(requests);
+
+      console.log('Transactions added successfully');
       onClose(); // Close the modal after submission
     } catch (error) {
       console.error('Error adding transaction:', error);
