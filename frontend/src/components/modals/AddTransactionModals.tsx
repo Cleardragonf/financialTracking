@@ -33,9 +33,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const adjustToLastDayOfMonth = (date: Date) => {
     const lastDay = getLastDayOfMonth(date.getFullYear(), date.getMonth());
-    console.log(date.getMonth())
     const adjustedDate = new Date(date);
-    adjustedDate.setDate(Math.min(date.getDate(), lastDay -1));
+    adjustedDate.setDate(Math.min(date.getDate(), lastDay));
     return adjustedDate;
   };
 
@@ -56,13 +55,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
         case 'bi-weekly':
           currentDate.setDate(currentDate.getDate() + 14);
           break;
-          case 'monthly':
-            currentDate.setDate(currentDate.getDate() + getLastDayOfMonth(currentDate.getFullYear(), currentDate.getMonth() + 1));
-            break;
+        case 'monthly':
+          currentDate.setDate(currentDate.getDate() + getLastDayOfMonth(currentDate.getFullYear(), currentDate.getMonth() + 1));
+          break;
         case 'yearly':
-          // Increment year and adjust day
           currentDate.setFullYear(currentDate.getFullYear() + 1);
-          currentDate.setDate(startDate.getDate());
           break;
         default:
           break;
@@ -75,10 +72,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const endOfYear = new Date(new Date().getFullYear(), 11, 31); // End of current year
-    let endDate = formData.enddate ? new Date(formData.enddate) : endOfYear;
-
     const startDate = new Date(formData.date);
+    let endDate = formData.enddate ? new Date(formData.enddate) : new Date(startDate.getFullYear() + 2, startDate.getMonth(), startDate.getDate());
+
     const recurrenceDates = formData.reocurrance !== 'one-time'
       ? calculateRecurringDates(startDate, formData.reocurrance, endDate)
       : [startDate];
@@ -180,17 +176,6 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 name="enddate"
                 value={formData.enddate}
                 onChange={handleChange}
-              />
-            </label>
-          )}
-          {formData.reocurrance === 'one-time' && (
-            <label>
-              End Date:
-              <input
-                type="date"
-                name="enddate"
-                value={formData.enddate}
-                disabled
               />
             </label>
           )}
