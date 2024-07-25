@@ -33,22 +33,22 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const adjustToLastDayOfMonth = (date: Date) => {
     const lastDay = getLastDayOfMonth(date.getFullYear(), date.getMonth());
+    console.log(date.getMonth())
     const adjustedDate = new Date(date);
-    adjustedDate.setDate(Math.min(date.getDate(), lastDay));
+    adjustedDate.setDate(Math.min(date.getDate(), lastDay -1));
     return adjustedDate;
   };
 
   const calculateRecurringDates = (startDate: Date, recurrence: string, endDate: Date) => {
     const dates: Date[] = [];
     let currentDate = new Date(startDate);
-  
+
     while (currentDate <= endDate) {
-      // Adjust currentDate to the last day of the month if needed
       let adjustedDate = adjustToLastDayOfMonth(currentDate);
       if (adjustedDate > endDate) break;
-  
-      dates.push(adjustedDate);
-  
+
+      dates.push(new Date(adjustedDate));
+
       switch (recurrence) {
         case 'weekly':
           currentDate.setDate(currentDate.getDate() + 7);
@@ -56,37 +56,27 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
         case 'bi-weekly':
           currentDate.setDate(currentDate.getDate() + 14);
           break;
-        case 'monthly':
-          // Adjust the day of the new month to fit if necessary
-          currentDate.setMonth(currentDate.getMonth() + 1);
-          currentDate = adjustToLastDayOfMonth(currentDate);
-          break;
-        case 'bi-monthly':
-          // Adjust the day of the new month to fit if necessary
-          currentDate.setMonth(currentDate.getMonth() + 2);
-          currentDate = adjustToLastDayOfMonth(currentDate);
-          break;
+          case 'monthly':
+            currentDate.setDate(currentDate.getDate() + getLastDayOfMonth(currentDate.getFullYear(), currentDate.getMonth() + 1));
+            break;
         case 'yearly':
-          // Adjust the day of the new month to fit if necessary
+          // Increment year and adjust day
           currentDate.setFullYear(currentDate.getFullYear() + 1);
-          currentDate = adjustToLastDayOfMonth(currentDate);
+          currentDate.setDate(startDate.getDate());
           break;
         default:
           break;
       }
     }
-  
+
     return dates;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    
     e.preventDefault();
 
-    let endDate = formData.enddate ? new Date(formData.enddate) : new Date();
-    if (!formData.enddate) {
-      endDate.setFullYear(endDate.getFullYear() + 2); // Default to 2 years if no end date
-    }
+    const endOfYear = new Date(new Date().getFullYear(), 11, 31); // End of current year
+    let endDate = formData.enddate ? new Date(formData.enddate) : endOfYear;
 
     const startDate = new Date(formData.date);
     const recurrenceDates = formData.reocurrance !== 'one-time'
@@ -103,10 +93,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           headers: {
             'Content-Type': 'application/json',
           },
-          
         });
       });
-      console.log(requests);
 
       await Promise.all(requests);
 
@@ -181,7 +169,6 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
               <option value="weekly">weekly</option>
               <option value="bi-weekly">bi-weekly</option>
               <option value="monthly">monthly</option>
-              <option value="bi-monthly">bi-monthly</option>
               <option value="yearly">yearly</option>
             </select>
           </label>

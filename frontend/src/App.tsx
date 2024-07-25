@@ -12,7 +12,7 @@ export interface Transaction {
   amount: number;
   date: string;
   type: 'Expense' | 'Payday' | 'Credit Card Payment' | 'Placeholder';
-  reocurrance: 'one-time' | 'weekly' | 'bi-weekly' | 'monthly' | 'bi-monthly' | 'yearly';
+  reocurrance: 'one-time' | 'weekly' | 'bi-weekly' | 'monthly' | 'yearly';
   enddate: string;
   notes: string;
   CreditTransId: number;
