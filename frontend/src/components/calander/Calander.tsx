@@ -4,6 +4,7 @@ import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO, las
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { Transaction } from '../../App';
+import { BalanceWrapper } from './BalanceWrapper';
 
 // Setup date-fns localizer
 const locales = {
@@ -117,6 +118,7 @@ export const InteractiveCalendar: React.FC = () => {
 
   return (
     <div style={{ height: '80vh' }}>
+      <BalanceWrapper date={viewDate} /> {/* Pass the viewDate to BalanceWrapper */}
       <Calendar
         localizer={localizer}
         events={events}
