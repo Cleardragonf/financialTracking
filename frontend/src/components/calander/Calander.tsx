@@ -106,7 +106,7 @@ export const InteractiveCalendar: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '80vh' }}>
+    <div style={{ height: '75vh' }}>
       <BalanceWrapper date={viewDate} /> {/* Passing current date or you can change it based on your need */}
       <Calendar
         localizer={localizer}

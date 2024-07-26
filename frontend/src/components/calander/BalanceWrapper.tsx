@@ -68,11 +68,6 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
       <h1>Balance</h1>
       <p>Monthly Starting Balance: ${startingBalance.toFixed(2)}</p>
       <p>Monthly Ending Balance: ${endingBalance.toFixed(2)}</p>
-      {transactions.map(transaction => (
-        <div key={transaction._id}>
-          {transaction.title} - ${transaction.amount}
-        </div>
-      ))}
     </div>
   );
 };
