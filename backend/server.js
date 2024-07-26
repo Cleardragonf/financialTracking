@@ -192,6 +192,21 @@ app.delete('/api/transactions/:id', async (req, res) => {
 
 
 //DEBT Portion
+
+app.get('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const debt = await Debt.findById(id);
+    if (!debt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+    res.json(debt);
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
 app.get('/api/debt', async (req, res) => {
   try {
     const debt = await Debt.find();

@@ -29,6 +29,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   });
 
   const [debts, setDebts] = useState<Debt[]>([]);
+  const [currentDebtAmount, setCurrentDebtAmount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +48,28 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
     fetchDebts();
   }, []);
+
+  useEffect(() => {
+    const fetchCurrentDebtAmount = async () => {
+      if (formData.type === 'Credit Card Payment' && formData.creditTransId) {
+        console.log('Fetching debt details for ID:', formData.creditTransId);
+        try {
+          const response = await axios.get(`http://localhost:5000/api/debt/${formData.creditTransId}`);
+          setCurrentDebtAmount(response.data.amount);
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error('Error fetching debt details:', error.response?.data || error.message);
+            setError(`Failed to fetch debt details: ${error.response?.data?.message || error.message}`);
+          } else {
+            console.error('Unexpected error:', error);
+            setError('Failed to fetch debt details');
+          }
+        }
+      }
+    };
+
+    fetchCurrentDebtAmount();
+  }, [formData.creditTransId, formData.type]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -100,14 +123,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     const startDate = new Date(formData.date);
     let endDate = formData.enddate ? new Date(formData.enddate) : new Date(startDate.getFullYear() + 2, startDate.getMonth(), startDate.getDate());
-  
+
     const recurrenceDates = formData.reocurrance !== 'one-time'
       ? calculateRecurringDates(startDate, formData.reocurrance, endDate)
       : [startDate];
-  
+
     try {
       // Post transactions
       const transactionRequests = recurrenceDates.map(date => {
@@ -121,34 +144,35 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           },
         });
       });
-  
-      // If type is 'Credit Card Payment' and payment type is 'Make a Payment'
-      if (formData.type === 'Credit Card Payment' && formData.paymentType === 'Make a payment') {
-        const debtData = {
-          amount: formData.amount, // Adjust as needed
-          notes: formData.notes || `Payment made on ${new Date().toISOString().split('T')[0]}`, // Example notes
-        };
-        
-        const debtRequest = axios.put(`http://localhost:5000/api/debt/${formData.creditTransId}`, debtData, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
-        await Promise.all([...transactionRequests, debtRequest]);
+
+      if (formData.type === 'Credit Card Payment' && formData.paymentType === 'payment') {
+        if (currentDebtAmount !== null) {
+          const updatedAmount = currentDebtAmount - Number(formData.amount);
+          const debtData = {
+            amount: updatedAmount, // Subtract the payment amount
+            notes: formData.notes || `Payment made on ${new Date().toISOString().split('T')[0]}`,
+          };
+
+          const debtRequest = axios.put(`http://localhost:5000/api/debt/${formData.creditTransId}`, debtData, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          await Promise.all([...transactionRequests, debtRequest]);
+        } else {
+          throw new Error('Current debt amount is not available');
+        }
       } else {
         await Promise.all(transactionRequests);
       }
-  
+
       console.log('Transactions added successfully');
       onClose(); // Close the modal after submission
     } catch (error) {
       console.error('Error adding transaction:', error);
     }
   };
-  
-  
-  
 
   if (!isOpen) return null;
 
