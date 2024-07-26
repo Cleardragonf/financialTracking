@@ -1,6 +1,6 @@
-import React, { FC, useMemo } from "react";
+import React, { FC, useMemo, useCallback } from "react";
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi } from 'ag-grid-community';
 import { Debt } from "../../App";
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -30,15 +30,15 @@ const AmountCellRenderer: FC<{ value: number }> = ({ value }) => {
 
 export const RecordsOfDebtPage: FC<RecordsOfDebtPageProps> = ({ debts }) => {
   const columnDefs: ColDef<Debt>[] = useMemo(() => [
-    { headerName: 'Transaction Name', field: 'title' },
-    {
-      headerName: "Amount",
-      field: "amount",
-      cellRenderer: (params: any) => <AmountCellRenderer value={params.value} />
-    },
-    { headerName: "Description", field: "notes" },
-    { headerName: "Type of Transaction", field: "type" },
+    { headerName: 'Transaction Name', field: 'title', flex: 1 },
+    { headerName: "Amount", field: "amount", cellRenderer: (params: any) => <AmountCellRenderer value={params.value} />, flex: 1 },
+    { headerName: "Description", field: "notes", flex: 1 },
+    { headerName: "Type of Transaction", field: "type", flex: 1 },
   ], []);
+
+  const onGridReady = useCallback((params: any) => {
+    params.api.sizeColumnsToFit();
+  }, []);
 
   return (
     <div>
@@ -48,6 +48,7 @@ export const RecordsOfDebtPage: FC<RecordsOfDebtPageProps> = ({ debts }) => {
         <AgGridReact
           columnDefs={columnDefs}
           rowData={debts}
+          onGridReady={onGridReady}
         />
       </div>
     </div>
