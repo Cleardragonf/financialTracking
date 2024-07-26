@@ -42,7 +42,7 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
 
   const calculateEndingBalance = (startBalance: number, transactions: Transaction[]): number => {
     return transactions.reduce((balance, transaction) => {
-      return balance + (transaction.type === 'Expense' ? -transaction.amount : transaction.amount);
+      return balance + (transaction.type === 'Expense' || transaction.type === 'Credit Card Payment' || transaction.type === 'Placeholder' ? -transaction.amount : transaction.amount);
     }, startBalance);
   };
 

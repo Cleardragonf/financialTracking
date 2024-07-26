@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO, addMonths } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { Transaction } from '../../App';
@@ -37,25 +37,36 @@ export const InteractiveCalendar: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [viewDate, setViewDate] = useState(new Date()); // State to track the current view date
 
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth() + 1; // months are zero-based
+        const startDate = new Date();
+        const endDate = addMonths(startDate, 36); // Fetch for 36 months
+
+        const startYear = startDate.getFullYear();
+        const startMonth = startDate.getMonth(); // months are zero-based
         
-        // Optionally, fetch transactions for the next 12 months
-        const monthsToFetch = Array.from({ length: 12 }, (_, i) => month + i);
-  
+        const endYear = endDate.getFullYear();
+        const endMonth = endDate.getMonth() + 1; // months are zero-based
+        
+        // Prepare list of months to fetch
+        const monthsToFetch = [];
+        for (let y = startYear; y <= endYear; y++) {
+          for (let m = (y === startYear ? startMonth : 1); m <= (y === endYear ? endMonth : 12); m++) {
+            monthsToFetch.push({ year: y, month: m });
+          }
+        }
+
         const responses = await Promise.all(
-          monthsToFetch.map(m => 
-            axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${m % 12 || 12}`)
+          monthsToFetch.map(({ year, month }) => 
+            axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${year}&month=${month}`)
           )
         );
-  
+
         // Flatten the array of transactions
         const transactions = responses.flatMap(response => response.data);
-  
+
         // Map and format the events
         const events = transactions.map(event => {
           const startDate = startOfDay(parseISO(event.date));
@@ -77,11 +88,9 @@ export const InteractiveCalendar: React.FC = () => {
     fetchEvents();
   }, []);
 
-  // Handle navigation to update the view date
   const handleNavigate = (date: Date) => {
     setViewDate(date);
   };
-
   // Style events based on their type
   const eventStyleGetter = (event: any) => {
     const { backgroundColor, color } = getEventStyles(event.type);
@@ -98,7 +107,7 @@ export const InteractiveCalendar: React.FC = () => {
 
   return (
     <div style={{ height: '80vh' }}>
-      <BalanceWrapper date={viewDate} /> {/* Pass the viewDate to BalanceWrapper */}
+      <BalanceWrapper date={viewDate} /> {/* Passing current date or you can change it based on your need */}
       <Calendar
         localizer={localizer}
         events={events}
@@ -107,6 +116,7 @@ export const InteractiveCalendar: React.FC = () => {
         style={{ height: '100%' }}
         eventPropGetter={eventStyleGetter} // Apply the event styles
         onNavigate={handleNavigate}
+
       />
     </div>
   );
