@@ -35,7 +35,15 @@ const transactionSchema = new mongoose.Schema({
   CreditTransId: Number
 });
 
+const debtSchema = new mongoose.Schema({
+  title: String,
+  amount: Number,
+  notes: String,
+  type: String,
+})
+
 const Transaction = mongoose.model('Transaction', transactionSchema);
+const Debt = mongoose.model('Debt', debtSchema);
 
 // Helper function to get date range for a month
 const getDateRangeForMonth = (year, month) => {
@@ -174,6 +182,31 @@ app.delete('/api/transactions/:id', async (req, res) => {
       return res.status(404).json({ message: 'Transaction not found' });
     }
     res.json({ message: 'Transaction deleted successfully', transaction: deletedTransaction });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
+
+//DEBT Portion
+app.get('/api/debt', async (req, res) => {
+  try {
+    const debt = await Debt.find();
+    res.json(debt);
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.post('/api/debt', async (req, res) => {
+  const { type, notes, title, amount } = req.body;
+  try {
+    const newDebt = new Debt({ type, notes, title, amount });
+    await newDebt.save();
+    res.json({ message: 'Transaction added successfully' });
   } catch (err) {
     console.error('MongoDB error', err);
     res.status(500).send('Server error');

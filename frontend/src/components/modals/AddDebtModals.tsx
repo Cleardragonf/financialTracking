@@ -9,7 +9,7 @@ interface AddDebtModalsProps {
 
 export const AddDebtModals: React.FC<AddDebtModalsProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
-    type: 'Expense',
+    type: 'Credit Card',
     title: '',
     amount: '',
     notes: '',
@@ -27,20 +27,21 @@ export const AddDebtModals: React.FC<AddDebtModalsProps> = ({ isOpen, onClose })
     e.preventDefault();
 
     try {
-      const debtData = {
-        ...formData,
-      };
+        const debtData = {
+          ...formData,
+        };
+        onClose();
         return axios.post('http://localhost:5000/api/debt', debtData, {
           headers: {
             'Content-Type': 'application/json',
           },
+          
         });
-      }catch (error) {
-      console.error('Error adding transaction:', error);
+    } catch (error) {
+      console.error('Error adding debt:', error);
     }
     
-    console.log('Transactions added successfully');
-    onClose(); // Close the modal after submission
+
   };
   
 

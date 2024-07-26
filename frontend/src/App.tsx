@@ -56,24 +56,33 @@ function App(): JSX.Element {
     const fetchTransactions = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/transactions');
-        const debtResponse = await fetch('http://localhost:5000/api/debts');
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
         }
-        if(!debtResponse.ok){
-          throw new Error('failed to fetch Debts');
-        }
         const data: Transaction[] = await response.json();
-        const debtData: Debt[] = await response.json();
         setTransactions(data);
-        setDebt(debtData);
       } catch (error) {
         console.error('Error fetching transactions:', error);
         // Handle error state or retry logic here
       }
     };
 
+    const fetchDebt = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/debt');
+        if (!response.ok) {
+          throw new Error('Failed to fetch debt');
+        }
+        const data: Debt[] = await response.json();
+        setDebt(data);
+      } catch (error) {
+        console.error('Error fetching debt:', error);
+        // Handle error state or retry logic here
+      }
+    };
+
     fetchTransactions();
+    fetchDebt();
   }, []);
 
   return (
@@ -84,8 +93,8 @@ function App(): JSX.Element {
             <Route path="/" element={<HomePage />} />
             <Route path="/transactions" element={<TransactionsPage transactions={transactions} />} />
             <Route path="/calander" element={<InteractiveCalendar />} />
-            <Route path="/ROD" element={<RecordsOfDebtPage debts={debt}/>} />
-            <Route path="/ROD/:DebtId" element={<DebtDetailPage></DebtDetailPage>} />
+            <Route path="/ROD" element={<RecordsOfDebtPage debts={debt} />} />
+            <Route path="/ROD/:DebtId" element={<DebtDetailPage />} />
           </Routes>
         </PageWrapper>
       </div>
