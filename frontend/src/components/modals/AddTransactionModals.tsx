@@ -65,6 +65,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
             setError('Failed to fetch debt details');
           }
         }
+      } else {
+        setCurrentDebtAmount(null); // Clear the amount if no valid creditTransId
       }
     };
 
@@ -233,6 +235,23 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 </select>
               </label>
             )}
+            {formData.type === 'Credit Card Payment' && (
+              <label>
+                Credit Transaction ID:
+                <select
+                  name="creditTransId"
+                  value={formData.creditTransId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Credit Transaction</option>
+                  {debts.map(debt => (
+                    <option key={debt._id} value={debt._id}>
+                      {debt.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               Amount:
               <input
@@ -242,6 +261,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 onChange={handleChange}
                 required
               />
+              {formData.type === 'Credit Card Payment' && currentDebtAmount !== null && (
+                <span className="remaining-amount">
+                  {' '}Amount Remaining: ${currentDebtAmount.toFixed(2)}
+                </span>
+              )}
             </label>
             <label>
               Date:
@@ -286,23 +310,6 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                 onChange={handleChange}
               />
             </label>
-            {formData.type === 'Credit Card Payment' && (
-              <label>
-                Credit Transaction ID:
-                <select
-                  name="creditTransId"
-                  value={formData.creditTransId}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Credit Transaction</option>
-                  {debts.map(debt => (
-                    <option key={debt._id} value={debt._id}>
-                      {debt.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
             <button type="submit">Add Transaction</button>
           </form>
         )}
