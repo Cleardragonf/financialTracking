@@ -35,6 +35,7 @@ const getEventStyles = (type: string) => {
 
 export const InteractiveCalendar: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
+  const [viewDate, setViewDate] = useState(new Date()); // State to track the current view date
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -59,7 +60,7 @@ export const InteractiveCalendar: React.FC = () => {
         const events = transactions.map(event => {
           const startDate = startOfDay(parseISO(event.date));
           const endDate = endOfDay(startDate); // Assuming one-day events
-  
+
           return {
             title: `${event.title} - $${event.amount}`,
             start: startDate,
@@ -72,9 +73,14 @@ export const InteractiveCalendar: React.FC = () => {
         console.error('Error fetching data:', error);
       }
     };
-  
+
     fetchEvents();
   }, []);
+
+  // Handle navigation to update the view date
+  const handleNavigate = (date: Date) => {
+    setViewDate(date);
+  };
 
   // Style events based on their type
   const eventStyleGetter = (event: any) => {
@@ -92,6 +98,7 @@ export const InteractiveCalendar: React.FC = () => {
 
   return (
     <div style={{ height: '80vh' }}>
+      <BalanceWrapper date={viewDate} /> {/* Pass the viewDate to BalanceWrapper */}
       <Calendar
         localizer={localizer}
         events={events}
@@ -99,6 +106,7 @@ export const InteractiveCalendar: React.FC = () => {
         endAccessor="end"
         style={{ height: '100%' }}
         eventPropGetter={eventStyleGetter} // Apply the event styles
+        onNavigate={handleNavigate}
       />
     </div>
   );
