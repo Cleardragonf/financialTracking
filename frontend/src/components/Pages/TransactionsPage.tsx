@@ -27,9 +27,7 @@ const AmountCellRenderer: FC<{ value: number, type: string }> = ({ value, type }
 
 export const TransactionsPage: FC<TransactionPageProps> = ({ transactions }) => {
   const columnDefs: ColDef<Transaction>[] = useMemo(() => [
-    {headerName: 'Transaction Name',
-      field: 'title'
-    },
+    { headerName: 'Transaction Name', field: 'title' },
     {
       headerName: "Amount",
       field: "amount",
@@ -38,9 +36,9 @@ export const TransactionsPage: FC<TransactionPageProps> = ({ transactions }) => 
     { headerName: "Description", field: "notes" },
     { headerName: "Date", field: "date" },
     { headerName: "Type of Transaction", field: "type" },
-    { headerName: "Reoccurrance", field: "reocurrance" },
+    { headerName: "Reoccurrence", field: "reocurrance" },
     { headerName: "End Date", field: "enddate" },
-    { headerName: "Credit Transaction Id", field: "CreditTransId" }
+    { headerName: "Credit Transaction Id", field: "creditTransId" } // Fixed field name
   ], []);
 
   return (

@@ -100,16 +100,17 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     const startDate = new Date(formData.date);
     let endDate = formData.enddate ? new Date(formData.enddate) : new Date(startDate.getFullYear() + 2, startDate.getMonth(), startDate.getDate());
-
+  
     const recurrenceDates = formData.reocurrance !== 'one-time'
       ? calculateRecurringDates(startDate, formData.reocurrance, endDate)
       : [startDate];
-
+  
     try {
-      const requests = recurrenceDates.map(date => {
+      // Post transactions
+      const transactionRequests = recurrenceDates.map(date => {
         const transactionData = {
           ...formData,
           date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
@@ -120,15 +121,34 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           },
         });
       });
-
-      await Promise.all(requests);
-
+  
+      // If type is 'Credit Card Payment' and payment type is 'Make a Payment'
+      if (formData.type === 'Credit Card Payment' && formData.paymentType === 'Make a payment') {
+        const debtData = {
+          amount: formData.amount, // Adjust as needed
+          notes: formData.notes || `Payment made on ${new Date().toISOString().split('T')[0]}`, // Example notes
+        };
+        
+        const debtRequest = axios.put(`http://localhost:5000/api/debt/${formData.creditTransId}`, debtData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        await Promise.all([...transactionRequests, debtRequest]);
+      } else {
+        await Promise.all(transactionRequests);
+      }
+  
       console.log('Transactions added successfully');
       onClose(); // Close the modal after submission
     } catch (error) {
       console.error('Error adding transaction:', error);
     }
   };
+  
+  
+  
 
   if (!isOpen) return null;
 

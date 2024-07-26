@@ -32,15 +32,16 @@ const transactionSchema = new mongoose.Schema({
   enddate: String,
   notes: String,
   type: String,
-  CreditTransId: Number
+  creditTransId: { type: mongoose.Schema.Types.ObjectId, ref: 'Debt' } // Updated to ObjectId
 });
 
 const debtSchema = new mongoose.Schema({
   title: String,
   amount: Number,
   notes: String,
-  type: String,
-})
+  type: String
+});
+
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 const Debt = mongoose.model('Debt', debtSchema);
@@ -144,9 +145,9 @@ app.get('/api/transactions', async (req, res) => {
 });
 
 app.post('/api/transactions', async (req, res) => {
-  const { type, date, reocurrance, enddate, CreditTransId, notes, title, amount } = req.body;
+  const { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
   try {
-    const newTransaction = new Transaction({ type, date, reocurrance, enddate, CreditTransId, notes, title, amount });
+    const newTransaction = new Transaction({ type, date, reocurrance, enddate, creditTransId, notes, title, amount });
     await newTransaction.save();
     res.json({ message: 'Transaction added successfully' });
   } catch (err) {
@@ -157,11 +158,11 @@ app.post('/api/transactions', async (req, res) => {
 
 app.put('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
-  const { type, date, reocurrance, enddate, CreditTransId, notes, title, amount } = req.body;
+  const { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
   try {
     const updatedTransaction = await Transaction.findByIdAndUpdate(
       id,
-      { type, date, reocurrance, enddate, CreditTransId, notes, amount, title },
+      { type, date, reocurrance, enddate, creditTransId, notes, amount, title },
       { new: true }
     );
     if (!updatedTransaction) {
@@ -212,6 +213,30 @@ app.post('/api/debt', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+// Update debt by ID
+app.put('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  const { amount, notes } = req.body; // Update the fields as needed
+
+  try {
+    const updatedDebt = await Debt.findByIdAndUpdate(
+      id,
+      { amount, notes },
+      { new: true }
+    );
+
+    if (!updatedDebt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+
+    res.json({ message: 'Debt updated successfully', debt: updatedDebt });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // Start server
 app.listen(PORT, () => {

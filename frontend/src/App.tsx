@@ -17,8 +17,9 @@ export interface Transaction {
   reocurrance: 'one-time' | 'weekly' | 'bi-weekly' | 'monthly' | 'yearly';
   enddate: string;
   notes: string;
-  CreditTransId: number;
+  creditTransId: string; // Updated from number to string to match MongoDB ObjectId
 }
+
 
 export interface Debt {
   _id: string;
