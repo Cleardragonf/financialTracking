@@ -10,30 +10,31 @@ interface RecordsOfDebtPageProps {
     debts: Debt[];
 }
 
-const formatAmount = (amount: number, type: string) => {
-  const formattedAmount = type === 'Payday' ? amount : -amount;
-  return formattedAmount.toLocaleString('en-US', {
+const formatAmount = (amount: number) => {
+  return amount.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD'
   });
 };
 
-const AmountCellRenderer: FC<{ value: number, type: string }> = ({ value, type }) => {
-  const style = {
-    color: type === 'Payday' ? 'green' : 'red'
-  };
-  return <span style={style}>{formatAmount(value, type)}</span>;
+const AmountCellRenderer: FC<{ value: number }> = ({ value }) => {
+  let color = 'black'; // Default color
+  if (value > 0) {
+    color = 'red'; // Positive numbers
+  } else if (value < 0) {
+    color = 'black'; // Negative numbers
+  }
+  
+  return <span style={{ color }}>{formatAmount(value)}</span>;
 };
 
 export const RecordsOfDebtPage: FC<RecordsOfDebtPageProps> = ({ debts }) => {
   const columnDefs: ColDef<Debt>[] = useMemo(() => [
-    {headerName: 'Transaction Name',
-      field: 'title'
-    },
+    { headerName: 'Transaction Name', field: 'title' },
     {
       headerName: "Amount",
       field: "amount",
-      cellRenderer: (params: any) => <AmountCellRenderer value={params.value} type={params.data.type} />
+      cellRenderer: (params: any) => <AmountCellRenderer value={params.value} />
     },
     { headerName: "Description", field: "notes" },
     { headerName: "Type of Transaction", field: "type" },
