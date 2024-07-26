@@ -1,0 +1,22 @@
+.balance-wrapper {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 300px;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+  }
+  
+  .balance-wrapper h1 {
+    font-size: 1.5em;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .balance-wrapper p {
+    font-size: 1.1em;
+    margin: 8px 0;
+    text-align: center;
+  }
+  

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Transaction } from '../../App';
+import './BalanceWrapper.css'; // Import the CSS file
 
 interface BalanceWrapperProps {
   date: Date;
@@ -26,7 +27,7 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
 
         // Calculate the balances
         const startBalance = calculateStartingBalance(previousMonthsTransactions);
-        const endBalance = calculateEndingBalance(0, response.data);
+        const endBalance = calculateEndingBalance(startBalance, response.data);
         console.log("End Balance", startBalance)
         setStartingBalance(startBalance);
         setEndingBalance(endBalance);
@@ -61,7 +62,7 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
   };
 
   return (
-    <div>
+    <div className="balance-wrapper">
       <h1>Balance</h1>
       <p>Monthly Starting Balance: ${startingBalance.toFixed(2)}</p>
       <p>Monthly Ending Balance: ${endingBalance.toFixed(2)}</p>

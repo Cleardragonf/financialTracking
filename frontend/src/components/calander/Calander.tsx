@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO, addMonths, subMonths } from 'date-fns';
+import { format, parse, startOfWeek, getDay, startOfDay, endOfDay, parseISO, addMonths } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { Transaction } from '../../App';
 import { BalanceWrapper } from './BalanceWrapper';
+import CustomToolbar from './CustomToolBar'; // Import the custom toolbar
 
 // Setup date-fns localizer
 const locales = {
@@ -118,6 +119,7 @@ export const InteractiveCalendar: React.FC = () => {
         style={{ height: '100%' }}
         eventPropGetter={eventStyleGetter} // Apply the event styles
         onNavigate={handleNavigate}
+        components={{ toolbar: CustomToolbar }} // Use the custom toolbar
       />
     </div>
   );

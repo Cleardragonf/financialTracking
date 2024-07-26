@@ -1,41 +1,52 @@
-/* src/Calendar.css */
+/* InteractiveCalendar.css */
+
+.calendar-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align the items to the top */
+}
+
+.balance-wrapper-container {
+  width: 300px; /* Adjust the width as needed */
+  margin-right: 20px; /* Adjust the space between the balance wrapper and the calendar */
+}
+
 .calendar {
-    width: 100%;
-    max-width: 800px;
-    margin: auto;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .days, .body {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .day, .cell {
-    width: 14%;
-    box-sizing: border-box;
-    padding: 10px;
-    border: 1px solid #ddd;
-  }
-  
-  .inactive {
-    background-color: #f9f9f9;
-  }
-  
-  .date {
-    font-weight: bold;
-  }
-  
-  .event {
-    background-color: #e0f7fa;
-    margin-top: 5px;
-    padding: 5px;
-    border-radius: 3px;
-  }
-  
+  flex-grow: 1;
+  max-width: 800px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.days, .body {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.day, .cell {
+  width: 14%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.inactive {
+  background-color: #f9f9f9;
+}
+
+.date {
+  font-weight: bold;
+}
+
+.event {
+  background-color: #e0f7fa;
+  margin-top: 5px;
+  padding: 5px;
+  border-radius: 3px;
+}
