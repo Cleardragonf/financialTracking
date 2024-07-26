@@ -20,6 +20,9 @@ export const NavigationBar: React.FC = () => {
           <li className="navbar-item">
             <a href="/contact" className="navbar-link">Contact</a>
           </li>
+          <li className='navbar-item'>
+            <a href='/ROD' className='navbar-link'>Records of Debt</a>
+          </li>
         </ul>
       </div>
     </nav>

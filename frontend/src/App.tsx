@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { PageWrapper } from './components/PageWrapper/PageWrapper';
 import { TransactionsPage } from './components/Pages/TransactionsPage';
 import { InteractiveCalendar } from './components/calander/Calander';
+import { RecordsOfDebtPage } from './components/Pages/RecordsOfDebtPage';
+import { DebtDetailPage } from './components/Pages/DebtDetailPage';
 
 // Define types for transactions
 export interface Transaction {
@@ -16,6 +18,14 @@ export interface Transaction {
   enddate: string;
   notes: string;
   CreditTransId: number;
+}
+
+export interface Debt {
+  _id: string;
+  title: string;
+  amount: number;
+  type: 'Credit Card' | 'Loan';
+  notes: string;
 }
 
 function HomePage() {
@@ -40,16 +50,23 @@ function HomePage() {
 
 function App(): JSX.Element {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debt, setDebt] = useState<Debt[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/transactions');
+        const debtResponse = await fetch('http://localhost:5000/api/debts');
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
         }
+        if(!debtResponse.ok){
+          throw new Error('failed to fetch Debts');
+        }
         const data: Transaction[] = await response.json();
+        const debtData: Debt[] = await response.json();
         setTransactions(data);
+        setDebt(debtData);
       } catch (error) {
         console.error('Error fetching transactions:', error);
         // Handle error state or retry logic here
@@ -67,6 +84,8 @@ function App(): JSX.Element {
             <Route path="/" element={<HomePage />} />
             <Route path="/transactions" element={<TransactionsPage transactions={transactions} />} />
             <Route path="/calander" element={<InteractiveCalendar />} />
+            <Route path="/ROD" element={<RecordsOfDebtPage debts={debt}/>} />
+            <Route path="/ROD/:DebtId" element={<DebtDetailPage></DebtDetailPage>} />
           </Routes>
         </PageWrapper>
       </div>
