@@ -125,14 +125,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     const startDate = new Date(formData.date);
     let endDate = formData.enddate ? new Date(formData.enddate) : new Date(startDate.getFullYear() + 2, startDate.getMonth(), startDate.getDate());
-
+  
     const recurrenceDates = formData.reocurrance !== 'one-time'
       ? calculateRecurringDates(startDate, formData.reocurrance, endDate)
       : [startDate];
-
+  
     try {
       // Post transactions
       const transactionRequests = recurrenceDates.map(date => {
@@ -146,21 +146,33 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
           },
         });
       });
-
-      if (formData.type === 'Credit Card Payment' && formData.paymentType === 'payment') {
+  
+      if (formData.type === 'Credit Card Payment' && formData.paymentType) {
         if (currentDebtAmount !== null) {
-          const updatedAmount = currentDebtAmount - Number(formData.amount);
+          let updatedAmount: number;
+          const paymentAmount = Number(formData.amount);
+  
+          if (formData.paymentType === 'payment') {
+            // Subtract payment amount
+            updatedAmount = currentDebtAmount - paymentAmount;
+          } else if (formData.paymentType === 'purchase') {
+            // Add payment amount
+            updatedAmount = currentDebtAmount + paymentAmount;
+          } else {
+            throw new Error('Invalid payment type');
+          }
+  
           const debtData = {
-            amount: updatedAmount, // Subtract the payment amount
-            notes: formData.notes || `Payment made on ${new Date().toISOString().split('T')[0]}`,
+            amount: updatedAmount,
+            notes: formData.notes || `Transaction made on ${new Date().toISOString().split('T')[0]}`,
           };
-
+  
           const debtRequest = axios.put(`http://localhost:5000/api/debt/${formData.creditTransId}`, debtData, {
             headers: {
               'Content-Type': 'application/json',
             },
           });
-
+  
           await Promise.all([...transactionRequests, debtRequest]);
         } else {
           throw new Error('Current debt amount is not available');
@@ -168,13 +180,14 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
       } else {
         await Promise.all(transactionRequests);
       }
-
+  
       console.log('Transactions added successfully');
       onClose(); // Close the modal after submission
     } catch (error) {
       console.error('Error adding transaction:', error);
     }
   };
+  
 
   if (!isOpen) return null;
 
