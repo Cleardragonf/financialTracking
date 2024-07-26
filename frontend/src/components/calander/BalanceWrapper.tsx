@@ -22,11 +22,12 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
         setTransactions(response.data);
 
         // Fetch transactions for all previous months up to the current month
-        const previousMonthsTransactions = await fetchPreviousMonthsTransactions(year, month);
+        const previousMonthsTransactions = await fetchPreviousMonthTransactions(year, month);
 
         // Calculate the balances
         const startBalance = calculateStartingBalance(previousMonthsTransactions);
-        const endBalance = calculateEndingBalance(startBalance, response.data);
+        const endBalance = calculateEndingBalance(0, response.data);
+        console.log("End Balance", startBalance)
         setStartingBalance(startBalance);
         setEndingBalance(endBalance);
       } catch (error) {
@@ -37,18 +38,14 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
     fetchTransactions();
   }, [date]);
 
-  const fetchPreviousMonthsTransactions = async (year: number, month: number): Promise<Transaction[]> => {
-    const transactions: Transaction[] = [];
-    for (let y = 2024; y <= year; y++) {
-      const startMonth = y === 2024 ? 7 : 1;
-      const endMonth = y === year ? month - 1 : 12;
+  const fetchPreviousMonthTransactions = async (year: number, month: number): Promise<Transaction[]> => {
+    // Calculate the previous month and adjust the year if necessary
+    const previousMonth = month === 1 ? 12 : month - 1;
+    const previousYear = month === 1 ? year - 1 : year;
 
-      for (let m = startMonth; m <= endMonth; m++) {
-        const response = await axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${y}&month=${m}`);
-        transactions.push(...response.data);
-      }
-    }
-    return transactions;
+    // Fetch transactions for the previous month
+    const response = await axios.get<Transaction[]>(`http://localhost:5000/api/transactions-by-month?year=${previousYear}&month=${previousMonth}`);
+    return response.data;
   };
 
   const calculateStartingBalance = (transactions: Transaction[]): number => {

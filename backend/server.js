@@ -1,14 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Import cors
-const moment = require('moment'); // Import moment
+const cors = require('cors');
+const moment = require('moment');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors()); // Use cors middleware
+app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB connection
@@ -39,43 +39,90 @@ const Transaction = mongoose.model('Transaction', transactionSchema);
 
 // Helper function to get date range for a month
 const getDateRangeForMonth = (year, month) => {
+  month = month.padStart(2, '0'); // Ensure month is two digits
   const start = moment(`${year}-${month}`, 'YYYY-MM').startOf('month').toDate();
-  const end = moment(start).endOf('month').toDate();
-  return {
-    start,
-    end
-  };
+    // Create a date object for the start of the next month
+    const nextMonthStart = moment(start).add(1, 'month').startOf('month').toDate();
+  
+    // Set the end date to one day before the start of the next month
+    const end = moment(nextMonthStart).subtract(2, 'day').endOf('day').toDate();
+  return { start, end };
 };
 
 // New API route for querying transactions by month and year
 app.get('/api/transactions-by-month', async (req, res) => {
   const { year, month } = req.query;
+
+  // Validate year and month
+  if (!year || !month || isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+    return res.status(400).send('Invalid year or month');
+  }
+
   const { start, end } = getDateRangeForMonth(year, month);
 
   try {
+    // Fetch all transactions
+    const transactions = await Transaction.find().exec();
+    const filteredTransactions = transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const transactionEndDate = transaction.enddate ? new Date(transaction.enddate) : null;
+
+      // Check if transaction date falls within the month range
+      const withinMonth = (transactionDate >= start && transactionDate <= end) ||
+                          (transactionEndDate && transactionEndDate >= start && transactionEndDate <= end) ||
+                          (transactionDate <= end && (transactionEndDate ? transactionEndDate >= start : true));
+
+      return withinMonth;
+    });
+
+    res.json(filteredTransactions);
+  } catch (err) {
+    console.error('Error fetching transactions', err);
+    res.status(500).send('Server error');
+  }
+});app.get('/api/transactions-by-month', async (req, res) => {
+  const { year, month } = req.query;
+
+  // Validate year and month
+  if (!year || !month || isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+    return res.status(400).send('Invalid year or month');
+  }
+
+  // Define start and end of the month
+  const start = moment(`${year}-${month}`, 'YYYY-MM').startOf('month').toDate();
+  const end = moment(start).endOf('month').toDate();
+
+  try {
+    // Fetch transactions that are within the month or span across the month
+    console.log('Query Start Date:', start.toISOString());
+    console.log('Query End Date:', end.toISOString());
+    
     const transactions = await Transaction.find({
       $or: [
-        // Transactions within the month
         {
           date: { $gte: start.toISOString(), $lte: end.toISOString() }
         },
-        // Transactions ending within the month
         {
           enddate: { $gte: start.toISOString(), $lte: end.toISOString() }
         },
-        // Transactions spanning the month
         {
-          date: { $lte: end.toISOString() },
-          enddate: { $gte: start.toISOString() }
+          $and: [
+            { date: { $lte: end.toISOString() } },
+            { enddate: { $gte: start.toISOString() } }
+          ]
         }
       ]
-    });
+    }).exec();
+    
+    console.log('Found Transactions:', transactions);
+    
     res.json(transactions);
   } catch (err) {
     console.error('Error fetching transactions', err);
     res.status(500).send('Server error');
   }
 });
+
 
 // Existing API routes
 app.get('/api/transactions', async (req, res) => {
