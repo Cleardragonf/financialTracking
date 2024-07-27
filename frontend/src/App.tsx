@@ -18,6 +18,10 @@ export interface Transaction {
   enddate: string;
   notes: string;
   creditTransId: string; // Updated from number to string to match MongoDB ObjectId
+  actions: {
+    edit: () => void;
+    delete: () => void;
+  };
 }
 
 

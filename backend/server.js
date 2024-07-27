@@ -213,7 +213,7 @@ app.put('/api/transactions/:id', async (req, res) => {
 app.delete('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedTransaction = await Transaction.findByIdAndRemove(id);
+    const deletedTransaction = await Transaction.findByIdAndDelete(id); // Updated method
     if (!deletedTransaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
