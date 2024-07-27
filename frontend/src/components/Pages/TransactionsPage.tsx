@@ -1,6 +1,6 @@
 import React, { FC, useMemo, useCallback } from "react";
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Transaction } from "../../App";
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -25,13 +25,27 @@ const AmountCellRenderer: FC<{ value: number, type: string }> = ({ value, type }
   return <span style={style}>{formatAmount(value, type)}</span>;
 };
 
+const CreditTransIdCellRenderer: FC<ICellRendererParams> = ({ value }) => {
+  return (
+    <div>
+      <a 
+        href={`/ROD/${value}`} 
+        target="_self"
+        title="Click here to see all transactions related to this debt"
+      >
+        {value}
+      </a>
+    </div>
+  );
+};
+
 export const TransactionsPage: FC<TransactionPageProps> = ({ transactions }) => {
   const columnDefs: ColDef<Transaction>[] = useMemo(() => [
     { headerName: 'Transaction Name', field: 'title', flex: 1 },
     {
       headerName: "Amount",
       field: "amount",
-      cellRenderer: (params: any) => <AmountCellRenderer value={params.value} type={params.data.type} />,
+      cellRenderer: (params: ICellRendererParams) => <AmountCellRenderer value={params.value} type={params.data.type} />,
       flex: 1
     },
     { headerName: "Description", field: "notes", flex: 1 },
@@ -39,7 +53,12 @@ export const TransactionsPage: FC<TransactionPageProps> = ({ transactions }) => 
     { headerName: "Type of Transaction", field: "type", flex: 1 },
     { headerName: "Reoccurrence", field: "reocurrance", flex: 1 },
     { headerName: "End Date", field: "enddate", flex: 1 },
-    { headerName: "Credit Transaction Id", field: "creditTransId", flex: 1 } // Fixed field name
+    {
+      headerName: "Credit Transaction Id",
+      field: "creditTransId",
+      flex: 1,
+      cellRenderer: CreditTransIdCellRenderer
+    }
   ], []);
 
   const onGridReady = useCallback((params: any) => {

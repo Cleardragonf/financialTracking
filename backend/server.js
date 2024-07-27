@@ -57,6 +57,29 @@ const getDateRangeForMonth = (year, month) => {
     const end = moment(nextMonthStart).subtract(2, 'day').endOf('day').toDate();
   return { start, end };
 };
+// New API route for querying transactions by creditTransId
+app.get('/api/transactions-by-creditTransId', async (req, res) => {
+  const { creditTransId } = req.query;
+
+  // Validate creditTransId
+  if (!creditTransId || !mongoose.Types.ObjectId.isValid(creditTransId)) {
+    return res.status(400).send('Invalid creditTransId');
+  }
+
+  try {
+    const transactions = await Transaction.find({ creditTransId }).exec();
+
+    if (transactions.length === 0) {
+      return res.status(404).send('No transactions found for the given creditTransId');
+    }
+
+    res.json(transactions);
+  } catch (err) {
+    console.error('Error fetching transactions', err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // New API route for querying transactions by month and year
 app.get('/api/transactions-by-month', async (req, res) => {
