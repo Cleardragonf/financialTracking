@@ -7,10 +7,20 @@ interface BalanceWrapperProps {
   date: Date;
 }
 
+interface Debt {
+  _id: string;
+  title: string;
+  amount: number;
+  type: 'Credit Card' | 'Loan';
+  notes: string;
+}
+
 export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
   const [startingBalance, setStartingBalance] = useState<number>(0);
   const [endingBalance, setEndingBalance] = useState<number>(0);
+  const [totalDebt, setTotalDebt] = useState<number>(0);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -28,7 +38,7 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
         // Calculate the balances
         const startBalance = calculateStartingBalance(previousMonthsTransactions);
         const endBalance = calculateEndingBalance(startBalance, response.data);
-        console.log("End Balance", startBalance)
+
         setStartingBalance(startBalance);
         setEndingBalance(endBalance);
       } catch (error) {
@@ -36,7 +46,21 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
       }
     };
 
+    const fetchDebts = async () => {
+      try {
+        const response = await axios.get<Debt[]>('http://localhost:5000/api/debt');
+        setDebts(response.data);
+
+        // Calculate the total debt amount
+        const total = response.data.reduce((sum, debt) => sum + debt.amount, 0);
+        setTotalDebt(total);
+      } catch (error) {
+        console.error('Error fetching debts:', error);
+      }
+    };
+
     fetchTransactions();
+    fetchDebts();
   }, [date]);
 
   const fetchPreviousMonthTransactions = async (year: number, month: number): Promise<Transaction[]> => {
@@ -63,9 +87,22 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
 
   return (
     <div className="balance-wrapper">
-      <h1>Balance</h1>
-      <p>Monthly Starting Balance: ${startingBalance.toFixed(2)}</p>
-      <p>Monthly Ending Balance: ${endingBalance.toFixed(2)}</p>
+      <div className="balance-section">
+        <h1>Balance</h1>
+        <p>Monthly Starting Balance: ${startingBalance.toFixed(2)}</p>
+        <p>Monthly Ending Balance: ${endingBalance.toFixed(2)}</p>
+      </div>
+      <div className="debt-section">
+        <div className="debt-section-header">
+          <h2>Total Debts</h2>
+          <p>Total Debt: ${totalDebt.toFixed(2)}</p>
+        </div>
+        <div className="debt-section-content">
+          {debts.map(debt => (
+            <p key={debt._id}>{debt.title}: ${debt.amount.toFixed(2)}</p>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

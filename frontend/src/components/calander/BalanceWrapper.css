@@ -1,22 +1,56 @@
 .balance-wrapper {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 16px;
-    max-width: 300px;
-    margin: 0 auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #f9f9f9;
-  }
-  
-  .balance-wrapper h1 {
-    font-size: 1.5em;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  
-  .balance-wrapper p {
-    font-size: 1.1em;
-    margin: 8px 0;
-    text-align: center;
-  }
-  
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 800px; /* Adjusted width to accommodate both balance and debts */
+  margin: 0 auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Space between balance and debt sections */
+  gap: 80px; /* Add a gap between the sections */
+}
+
+.balance-section, .debt-section {
+  width: 48%; /* Adjust width to fit two sections side by side */
+}
+
+.balance-wrapper h1 {
+  font-size: 1.5em;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.balance-wrapper p {
+  font-size: 1.1em;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.debt-section {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 110px; /* Set a max height for the scrollable area */
+}
+
+.debt-section h2 {
+  font-size: 1.2em;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.debt-section p {
+  font-size: 1em;
+  margin: 8px 0;
+  text-align: left;
+}
+
+/* Add this rule for the debt-section-content */
+.debt-section-content {
+  max-height: 50px; /* Set a max height for the scrollable area */
+  overflow-y: auto; /* Enable vertical scrolling */
+  font-size: 12px;
+}
