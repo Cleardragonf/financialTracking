@@ -145,16 +145,28 @@ app.get('/api/transactions', async (req, res) => {
 });
 
 app.post('/api/transactions', async (req, res) => {
-  const { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
   try {
-    const newTransaction = new Transaction({ type, date, reocurrance, enddate, creditTransId, notes, title, amount });
-    await newTransaction.save();
-    res.json({ message: 'Transaction added successfully' });
-  } catch (err) {
-    console.error('MongoDB error', err);
-    res.status(500).send('Server error');
+    const { creditTransId, ...otherData } = req.body;
+
+    if (creditTransId && !mongoose.Types.ObjectId.isValid(creditTransId)) {
+      return res.status(400).json({ error: 'Invalid creditTransId' });
+    }
+
+    const transactionData = {
+      ...otherData,
+      ...(creditTransId ? { creditTransId } : {})
+    };
+
+    const transaction = new Transaction(transactionData);
+    await transaction.save();
+
+    res.status(201).json(transaction);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 app.put('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
