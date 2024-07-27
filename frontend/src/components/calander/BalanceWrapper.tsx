@@ -37,7 +37,7 @@ export const BalanceWrapper: React.FC<BalanceWrapperProps> = ({ date }) => {
 
         // Calculate the balances
         const startBalance = calculateStartingBalance(previousMonthsTransactions);
-        const endBalance = calculateEndingBalance(startBalance, response.data);
+        const endBalance = calculateEndingBalance(0, response.data);
 
         setStartingBalance(startBalance);
         setEndingBalance(endBalance);
