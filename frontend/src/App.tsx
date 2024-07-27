@@ -92,7 +92,7 @@ function App(): JSX.Element {
         <PageWrapper>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/transactions" element={<TransactionsPage transactions={transactions} />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/calander" element={<InteractiveCalendar />} />
             <Route path="/ROD" element={<RecordsOfDebtPage debts={debt} />} />
             <Route path="/ROD/:DebtId" element={<DebtDetailPage />} />
