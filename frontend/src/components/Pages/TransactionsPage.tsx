@@ -19,6 +19,7 @@ const formatAmount = (amount: number, type: string) => {
 export const TransactionsPage = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
 
   const fetchTransactions = async () => {
     try {
@@ -35,6 +36,7 @@ export const TransactionsPage = () => {
 
   const handleModalClose = () => {
     setModalOpen(false);
+    setEditTransaction(null); // Clear the transaction being edited
     fetchTransactions();
   };
 
@@ -47,14 +49,15 @@ export const TransactionsPage = () => {
     }
   };
 
-  const handleEdit = async (id: string) => {
-    console.log('Edit transaction with ID:', id);
+  const handleEdit = (transaction: Transaction) => {
+    setEditTransaction(transaction); // Set the transaction data for editing
+    setModalOpen(true); // Open the modal
   };
 
   const ActionsCellRenderer: FC<ICellRendererParams> = ({ data }) => {
     return (
       <div style={{display: '-webkit-inline-flex', gap: "5px"}}>
-        <button onClick={() => handleEdit(data._id)}>
+        <button onClick={() => handleEdit(data)}>
           <Icon type="edit" />
         </button>
         <button onClick={() => handleDelete(data._id)}>
@@ -102,7 +105,11 @@ export const TransactionsPage = () => {
   return (
     <div>
       <button onClick={() => setModalOpen(true)}>Add Transaction</button>
-      <AddTransactionModal isOpen={isModalOpen} onClose={handleModalClose} />
+      <AddTransactionModal 
+        isOpen={isModalOpen} 
+        onClose={handleModalClose} 
+        transaction={editTransaction} 
+      />
       <h2>Transactions:</h2>
       <div className="ag-theme-alpine" style={{ height: '80vh', width: '100%' }}>
         <AgGridReact

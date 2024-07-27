@@ -13,8 +13,7 @@ app.use(bodyParser.json());
 
 // MongoDB connection
 mongoose.connect('mongodb://127.0.0.1:27017/Trial', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+
 });
 
 const db = mongoose.connection;
@@ -32,7 +31,16 @@ const transactionSchema = new mongoose.Schema({
   enddate: String,
   notes: String,
   type: String,
-  creditTransId: { type: mongoose.Schema.Types.ObjectId, ref: 'Debt' } // Updated to ObjectId
+  creditTransId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Debt',
+    required: false, 
+    validate: {
+      validator: (v) => mongoose.Types.ObjectId.isValid(v) || v === null,
+      message: 'Invalid ObjectId format'
+    }
+  }
+  
 });
 
 const debtSchema = new mongoose.Schema({
@@ -112,47 +120,6 @@ app.get('/api/transactions-by-month', async (req, res) => {
     console.error('Error fetching transactions', err);
     res.status(500).send('Server error');
   }
-});app.get('/api/transactions-by-month', async (req, res) => {
-  const { year, month } = req.query;
-
-  // Validate year and month
-  if (!year || !month || isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-    return res.status(400).send('Invalid year or month');
-  }
-
-  // Define start and end of the month
-  const start = moment(`${year}-${month}`, 'YYYY-MM').startOf('month').toDate();
-  const end = moment(start).endOf('month').toDate();
-
-  try {
-    // Fetch transactions that are within the month or span across the month
-    console.log('Query Start Date:', start.toISOString());
-    console.log('Query End Date:', end.toISOString());
-    
-    const transactions = await Transaction.find({
-      $or: [
-        {
-          date: { $gte: start.toISOString(), $lte: end.toISOString() }
-        },
-        {
-          enddate: { $gte: start.toISOString(), $lte: end.toISOString() }
-        },
-        {
-          $and: [
-            { date: { $lte: end.toISOString() } },
-            { enddate: { $gte: start.toISOString() } }
-          ]
-        }
-      ]
-    }).exec();
-    
-    console.log('Found Transactions:', transactions);
-    
-    res.json(transactions);
-  } catch (err) {
-    console.error('Error fetching transactions', err);
-    res.status(500).send('Server error');
-  }
 });
 
 
@@ -169,17 +136,15 @@ app.get('/api/transactions', async (req, res) => {
 
 app.post('/api/transactions', async (req, res) => {
   try {
-    const { creditTransId, ...otherData } = req.body;
+    let { creditTransId, ...otherData } = req.body;
 
     if (creditTransId && !mongoose.Types.ObjectId.isValid(creditTransId)) {
       return res.status(400).json({ error: 'Invalid creditTransId' });
     }
 
-    const transactionData = {
-      ...otherData,
-      ...(creditTransId ? { creditTransId } : {})
-    };
+    creditTransId = creditTransId ? new mongoose.Types.ObjectId(creditTransId) : null;
 
+    const transactionData = { ...otherData, creditTransId };
     const transaction = new Transaction(transactionData);
     await transaction.save();
 
@@ -193,16 +158,25 @@ app.post('/api/transactions', async (req, res) => {
 
 app.put('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
-  const { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
+  let { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
+
+  if (creditTransId && !mongoose.Types.ObjectId.isValid(creditTransId)) {
+    return res.status(400).json({ error: 'Invalid creditTransId' });
+  }
+
+  creditTransId = creditTransId ? new mongoose.Types.ObjectId(creditTransId) : null;
+
   try {
     const updatedTransaction = await Transaction.findByIdAndUpdate(
       id,
       { type, date, reocurrance, enddate, creditTransId, notes, amount, title },
       { new: true }
     );
+
     if (!updatedTransaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
+
     res.json({ message: 'Transaction updated successfully', transaction: updatedTransaction });
   } catch (err) {
     console.error('MongoDB error', err);
