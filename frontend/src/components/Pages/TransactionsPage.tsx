@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC, useMemo } from 'react';
+import React, { useState, useEffect, FC, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
@@ -66,6 +66,10 @@ export const TransactionsPage: FC = () => {
     { headerName: "Credit Transaction Id", field: "creditTransId" } // Fixed field name
   ], []);
 
+  const onGridReady = useCallback((params: any) => {
+    params.api.sizeColumnsToFit();
+  }, [])
+
   return (
     <div>
       <button onClick={() => setModalOpen(true)}>Add Transaction</button>
@@ -75,6 +79,7 @@ export const TransactionsPage: FC = () => {
         <AgGridReact
           columnDefs={columnDefs}
           rowData={transactions}
+          onGridReady={onGridReady}
         />
       </div>
     </div>
