@@ -238,15 +238,31 @@ app.post('/api/debt', async (req, res) => {
   }
 });
 
+// Delete debt by ID
+app.delete('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const deletedDebt = await Debt.findByIdAndDelete(id);
+    if (!deletedDebt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+    res.json({ message: 'Debt deleted successfully', debt: deletedDebt });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Update debt by ID
 app.put('/api/debt/:id', async (req, res) => {
   const { id } = req.params;
-  const { amount, notes } = req.body; // Update the fields as needed
+  const { type, notes, title, amount } = req.body; // Include all fields
 
   try {
     const updatedDebt = await Debt.findByIdAndUpdate(
       id,
-      { amount, notes },
+      { type, notes, title, amount }, // Update all fields
       { new: true }
     );
 
@@ -260,6 +276,7 @@ app.put('/api/debt/:id', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
 
 
 // Start server

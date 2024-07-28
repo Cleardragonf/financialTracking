@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { PageWrapper } from './components/PageWrapper/PageWrapper';
 import { TransactionsPage } from './components/Pages/TransactionsPage';
 import { InteractiveCalendar } from './components/calander/Calander';
-import { RecordsOfDebtPage } from './components/Pages/RecordsOfDebtPage';
 import { DebtDetailPage } from './components/Pages/DebtDetailPage';
+import { RecordsOfDebtPage } from './components/Pages/RecordsOfDebtPage';
 
 // Define types for transactions
 export interface Transaction {
@@ -31,6 +31,10 @@ export interface Debt {
   amount: number;
   type: 'Credit Card' | 'Loan';
   notes: string;
+  actions: {
+    edit: () => void;
+    delete: () => void;
+  };
 }
 
 function HomePage() {
@@ -98,7 +102,7 @@ function App(): JSX.Element {
             <Route path="/" element={<HomePage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/calander" element={<InteractiveCalendar />} />
-            <Route path="/ROD" element={<RecordsOfDebtPage debts={debt} />} />
+            <Route path="/ROD" element={<RecordsOfDebtPage />} />
             <Route path="/ROD/:DebtId" element={<DebtDetailPage />} />
           </Routes>
         </PageWrapper>
