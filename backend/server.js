@@ -13,8 +13,7 @@ app.use(bodyParser.json());
 
 // MongoDB connection
 mongoose.connect('mongodb://127.0.0.1:27017/Trial', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+
 });
 
 const db = mongoose.connection;
@@ -32,10 +31,28 @@ const transactionSchema = new mongoose.Schema({
   enddate: String,
   notes: String,
   type: String,
-  CreditTransId: Number
+  creditTransId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Debt',
+    required: false, 
+    validate: {
+      validator: (v) => mongoose.Types.ObjectId.isValid(v) || v === null,
+      message: 'Invalid ObjectId format'
+    }
+  }
+  
 });
 
+const debtSchema = new mongoose.Schema({
+  title: String,
+  amount: Number,
+  notes: String,
+  type: String
+});
+
+
 const Transaction = mongoose.model('Transaction', transactionSchema);
+const Debt = mongoose.model('Debt', debtSchema);
 
 // Helper function to get date range for a month
 const getDateRangeForMonth = (year, month) => {
@@ -48,6 +65,29 @@ const getDateRangeForMonth = (year, month) => {
     const end = moment(nextMonthStart).subtract(2, 'day').endOf('day').toDate();
   return { start, end };
 };
+// New API route for querying transactions by creditTransId
+app.get('/api/transactions-by-creditTransId', async (req, res) => {
+  const { creditTransId } = req.query;
+
+  // Validate creditTransId
+  if (!creditTransId || !mongoose.Types.ObjectId.isValid(creditTransId)) {
+    return res.status(400).send('Invalid creditTransId');
+  }
+
+  try {
+    const transactions = await Transaction.find({ creditTransId }).exec();
+
+    if (transactions.length === 0) {
+      return res.status(404).send('No transactions found for the given creditTransId');
+    }
+
+    res.json(transactions);
+  } catch (err) {
+    console.error('Error fetching transactions', err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // New API route for querying transactions by month and year
 app.get('/api/transactions-by-month', async (req, res) => {
@@ -80,47 +120,6 @@ app.get('/api/transactions-by-month', async (req, res) => {
     console.error('Error fetching transactions', err);
     res.status(500).send('Server error');
   }
-});app.get('/api/transactions-by-month', async (req, res) => {
-  const { year, month } = req.query;
-
-  // Validate year and month
-  if (!year || !month || isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-    return res.status(400).send('Invalid year or month');
-  }
-
-  // Define start and end of the month
-  const start = moment(`${year}-${month}`, 'YYYY-MM').startOf('month').toDate();
-  const end = moment(start).endOf('month').toDate();
-
-  try {
-    // Fetch transactions that are within the month or span across the month
-    console.log('Query Start Date:', start.toISOString());
-    console.log('Query End Date:', end.toISOString());
-    
-    const transactions = await Transaction.find({
-      $or: [
-        {
-          date: { $gte: start.toISOString(), $lte: end.toISOString() }
-        },
-        {
-          enddate: { $gte: start.toISOString(), $lte: end.toISOString() }
-        },
-        {
-          $and: [
-            { date: { $lte: end.toISOString() } },
-            { enddate: { $gte: start.toISOString() } }
-          ]
-        }
-      ]
-    }).exec();
-    
-    console.log('Found Transactions:', transactions);
-    
-    res.json(transactions);
-  } catch (err) {
-    console.error('Error fetching transactions', err);
-    res.status(500).send('Server error');
-  }
 });
 
 
@@ -136,29 +135,48 @@ app.get('/api/transactions', async (req, res) => {
 });
 
 app.post('/api/transactions', async (req, res) => {
-  const { type, date, reocurrance, enddate, CreditTransId, notes, title, amount } = req.body;
   try {
-    const newTransaction = new Transaction({ type, date, reocurrance, enddate, CreditTransId, notes, title, amount });
-    await newTransaction.save();
-    res.json({ message: 'Transaction added successfully' });
-  } catch (err) {
-    console.error('MongoDB error', err);
-    res.status(500).send('Server error');
+    let { creditTransId, ...otherData } = req.body;
+
+    if (creditTransId && !mongoose.Types.ObjectId.isValid(creditTransId)) {
+      return res.status(400).json({ error: 'Invalid creditTransId' });
+    }
+
+    creditTransId = creditTransId ? new mongoose.Types.ObjectId(creditTransId) : null;
+
+    const transactionData = { ...otherData, creditTransId };
+    const transaction = new Transaction(transactionData);
+    await transaction.save();
+
+    res.status(201).json(transaction);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
+
 app.put('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
-  const { type, date, reocurrance, enddate, CreditTransId, notes, title, amount } = req.body;
+  let { type, date, reocurrance, enddate, creditTransId, notes, title, amount } = req.body;
+
+  if (creditTransId && !mongoose.Types.ObjectId.isValid(creditTransId)) {
+    return res.status(400).json({ error: 'Invalid creditTransId' });
+  }
+
+  creditTransId = creditTransId ? new mongoose.Types.ObjectId(creditTransId) : null;
+
   try {
     const updatedTransaction = await Transaction.findByIdAndUpdate(
       id,
-      { type, date, reocurrance, enddate, CreditTransId, notes, amount, title },
+      { type, date, reocurrance, enddate, creditTransId, notes, amount, title },
       { new: true }
     );
+
     if (!updatedTransaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
+
     res.json({ message: 'Transaction updated successfully', transaction: updatedTransaction });
   } catch (err) {
     console.error('MongoDB error', err);
@@ -169,7 +187,7 @@ app.put('/api/transactions/:id', async (req, res) => {
 app.delete('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedTransaction = await Transaction.findByIdAndRemove(id);
+    const deletedTransaction = await Transaction.findByIdAndDelete(id); // Updated method
     if (!deletedTransaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
@@ -179,6 +197,87 @@ app.delete('/api/transactions/:id', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+
+
+//DEBT Portion
+
+app.get('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const debt = await Debt.findById(id);
+    if (!debt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+    res.json(debt);
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/api/debt', async (req, res) => {
+  try {
+    const debt = await Debt.find();
+    res.json(debt);
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.post('/api/debt', async (req, res) => {
+  const { type, notes, title, amount } = req.body;
+  try {
+    const newDebt = new Debt({ type, notes, title, amount });
+    await newDebt.save();
+    res.json({ message: 'Transaction added successfully' });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Delete debt by ID
+app.delete('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const deletedDebt = await Debt.findByIdAndDelete(id);
+    if (!deletedDebt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+    res.json({ message: 'Debt deleted successfully', debt: deletedDebt });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Update debt by ID
+app.put('/api/debt/:id', async (req, res) => {
+  const { id } = req.params;
+  const { type, notes, title, amount } = req.body; // Include all fields
+
+  try {
+    const updatedDebt = await Debt.findByIdAndUpdate(
+      id,
+      { type, notes, title, amount }, // Update all fields
+      { new: true }
+    );
+
+    if (!updatedDebt) {
+      return res.status(404).json({ message: 'Debt not found' });
+    }
+
+    res.json({ message: 'Debt updated successfully', debt: updatedDebt });
+  } catch (err) {
+    console.error('MongoDB error', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
 
 // Start server
 app.listen(PORT, () => {

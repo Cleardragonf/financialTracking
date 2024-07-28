@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { PageWrapper } from './components/PageWrapper/PageWrapper';
 import { TransactionsPage } from './components/Pages/TransactionsPage';
 import { InteractiveCalendar } from './components/calander/Calander';
+import { DebtDetailPage } from './components/Pages/DebtDetailPage';
+import { RecordsOfDebtPage } from './components/Pages/RecordsOfDebtPage';
 
 // Define types for transactions
 export interface Transaction {
@@ -15,7 +17,24 @@ export interface Transaction {
   reocurrance: 'one-time' | 'weekly' | 'bi-weekly' | 'monthly' | 'yearly';
   enddate: string;
   notes: string;
-  CreditTransId: number;
+  creditTransId: string; // Updated from number to string to match MongoDB ObjectId
+  actions: {
+    edit: () => void;
+    delete: () => void;
+  };
+}
+
+
+export interface Debt {
+  _id: string;
+  title: string;
+  amount: number;
+  type: 'Credit Card' | 'Loan';
+  notes: string;
+  actions: {
+    edit: () => void;
+    delete: () => void;
+  };
 }
 
 function HomePage() {
@@ -40,6 +59,7 @@ function HomePage() {
 
 function App(): JSX.Element {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debt, setDebt] = useState<Debt[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -56,7 +76,22 @@ function App(): JSX.Element {
       }
     };
 
+    const fetchDebt = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/debt');
+        if (!response.ok) {
+          throw new Error('Failed to fetch debt');
+        }
+        const data: Debt[] = await response.json();
+        setDebt(data);
+      } catch (error) {
+        console.error('Error fetching debt:', error);
+        // Handle error state or retry logic here
+      }
+    };
+
     fetchTransactions();
+    fetchDebt();
   }, []);
 
   return (
@@ -65,8 +100,10 @@ function App(): JSX.Element {
         <PageWrapper>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/transactions" element={<TransactionsPage transactions={transactions} />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/calander" element={<InteractiveCalendar />} />
+            <Route path="/ROD" element={<RecordsOfDebtPage />} />
+            <Route path="/ROD/:DebtId" element={<DebtDetailPage />} />
           </Routes>
         </PageWrapper>
       </div>

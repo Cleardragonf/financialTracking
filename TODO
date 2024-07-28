@@ -1,0 +1,6 @@
+•  Clean up Calendars Layout
+•  Look into a Signin sort of Setup
+•  Start looking into hosting this application
+•  Think How would I implement Savings...
+•  need to Rework Credit Card Payments and Credit Card Usage within the Calander...currently both are showing up under Expense...which is like double charging
+•  Possible thing to look into...IF you delete a Transaction that's paying for a CC...the Debt keeps the balance as if it already happened...We'll need to REFUND that sort of...
