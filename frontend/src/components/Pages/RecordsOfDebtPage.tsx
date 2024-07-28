@@ -23,7 +23,7 @@ const formatAmount = (amount: number) => {
 const TransactionCellRendering: FC<ICellRendererParams> = ({ data }) => {
   return (
     <div>
-      <a> 
+      <a href={`/ROD/${data._id}`} target="_self"> 
         {data.title}
       </a>
     </div>
@@ -108,7 +108,6 @@ export const RecordsOfDebtPage= () => {
     },
     { headerName: "Description", field: "notes", flex: 1 },
     { headerName: "Type of Transaction", field: "type", flex: 1 },
-    { headerName: "Transaction Id", field: "_id", flex: 1 },
     {
       headerName: "Actions",
       field: "actions",

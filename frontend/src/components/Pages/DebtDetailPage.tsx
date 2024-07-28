@@ -4,7 +4,8 @@ import { AgGridReact } from 'ag-grid-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { Transaction } from '../../App'; // Ensure Transaction is imported correctly
+import { Debt, Transaction } from '../../App'; // Ensure Transaction is imported correctly
+import axios from 'axios';
 
 interface DebtDetailPageProps {
   // Define any props if needed
@@ -31,6 +32,7 @@ const AmountCellRenderer: FC<{ value: number }> = ({ value }) => {
 export const DebtDetailPage: FC<DebtDetailPageProps> = () => {
   const { DebtId } = useParams<{ DebtId: string }>();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debt, setDebt] = useState<Debt>();
   const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
@@ -47,6 +49,20 @@ export const DebtDetailPage: FC<DebtDetailPageProps> = () => {
         // Handle error state or retry logic here
       }
     };
+    const fetchDebt = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/debt/${DebtId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch debt details');
+        }
+        const data: Debt = await response.json();
+        setDebt(data);
+      } catch (error) {
+        console.error('Error fetching debt details:', error);
+      }
+    };
+    
+    fetchDebt();
     fetchTransactions();
   }, [DebtId]);
 
@@ -77,7 +93,8 @@ export const DebtDetailPage: FC<DebtDetailPageProps> = () => {
       <button onClick={() => navigate(-1)} style={{ marginBottom: '20px' }}>
         &larr; Back
       </button>
-      <h1>Debt Details for {DebtId}</h1>
+      <h1>Debt Details for {debt?.title}</h1>
+      <h3>Balance: {debt?.amount}</h3>
       <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
         <AgGridReact
           columnDefs={columnDefs}
